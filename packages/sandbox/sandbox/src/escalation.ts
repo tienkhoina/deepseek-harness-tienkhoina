@@ -157,6 +157,12 @@ export interface EscalationRequest {
  */
 export async function approveEscalation<A, C>(request: EscalationRequest, approval: EscalationApproval<A, C>): Promise<SandboxMode> {
   const { requestedMode: mode, effectiveMode, justification, subject } = request
+
+  // If already at or above the requested mode, silently approve (no escalation needed)
+  if (effectiveMode === mode) {
+    return mode as SandboxMode
+  }
+
   // Strict widening is an EXECUTION check against the call's effective mode —
   // deliberately not a schema constraint (the enum is the closed target
   // vocabulary; the effective mode is per-call truth).
