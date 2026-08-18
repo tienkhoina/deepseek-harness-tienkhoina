@@ -89,12 +89,6 @@ export function apply(ctx: ClientContext): void {
     () => ctx.remote.$on('settings/document-updated', () => { void configurable.load() }),
     'ui-settings-plugins: served-namespace invalidations',
   )
-  ctx.effect(
-    () => ctx.remote.$on('connection/status-changed', (status) => {
-      if (status === 'connected') void configurable.load()
-    }),
-    'ui-settings-plugins: served-namespace reconnect',
-  )
 
   // The credential a card reports is not part of any settings section, so its
   // scope publishes nothing when one is written. This is the only signal that
