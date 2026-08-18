@@ -89,6 +89,15 @@ export function apply(ctx: ClientContext): void {
     () => ctx.remote.$on('settings/document-updated', () => { void configurable.load() }),
     'ui-settings-plugins: served-namespace invalidations',
   )
+  ctx.effect(
+    () => ctx.on('connection/reset', () => { void configurable.load() }),
+    'ui-settings-plugins: served-namespace reconnect',
+  )
+  // A card registered after the first read joins the list without a wire call.
+  ctx.effect(
+    () => ctx.slots.subscribe('settings.plugin.item', () => { configurable.refresh() }),
+    'ui-settings-plugins: card ledger',
+  )
 
   // The credential a card reports is not part of any settings section, so its
   // scope publishes nothing when one is written. This is the only signal that
