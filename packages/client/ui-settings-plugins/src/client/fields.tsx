@@ -87,6 +87,104 @@ export function ValueField(props: FieldProps & {
   )
 }
 
+/** One option in a select field. */
+export interface SelectOption {
+  /** Stored value. */
+  value: string
+  /** Visible option label. */
+  label: string
+  /** Prevent selecting a provider that is not mounted. */
+  disabled?: boolean
+}
+
+/** A staged select field with the same reset behavior as a value field. */
+export function SelectField(props: FieldProps & {
+  /** Options offered by the owning card. */
+  options: readonly SelectOption[]
+}) {
+  return (
+    <div className={css.field}>
+      <div className={css.head}>
+        <label className={css.label} htmlFor={props.id}>{props.label}</label>
+        {props.overridden
+          ? (
+            <span className={css.badges}>
+              <span className={css.badge}>{props.overriddenLabel}</span>
+              <button
+                type="button"
+                className={css.reset}
+                disabled={props.disabled}
+                onClick={props.onReset}
+              >
+                {props.resetLabel}
+              </button>
+            </span>
+          )
+          : null}
+      </div>
+      <select
+        id={props.id}
+        className={props.invalid ? css.inputInvalid : css.selectInput}
+        {...props.invalid ? { 'aria-invalid': true } : {}}
+        value={props.text}
+        disabled={props.disabled}
+        onChange={(event) => { props.onEdit(event.target.value) }}
+      >
+        {props.options.map(option => (
+          <option key={option.value} value={option.value} disabled={option.disabled}>{option.label}</option>
+        ))}
+      </select>
+      <p className={props.invalid ? css.invalid : css.hint}>
+        {props.invalid ? props.invalidLabel : props.hint}
+      </p>
+    </div>
+  )
+}
+
+/** A staged boolean field rendered as a checkbox. */
+export function ToggleField(props: Pick<FieldProps, 'id' | 'label' | 'hint' | 'text' | 'overridden' | 'invalid' | 'overriddenLabel' | 'resetLabel' | 'invalidLabel' | 'disabled' | 'onReset'> & {
+  /** Stage the next boolean value. */
+  onToggle: (value: boolean) => void
+  /** Label rendered for an enabled value. */
+  enabledLabel: string
+  /** Label rendered for a disabled value. */
+  disabledLabel: string
+}) {
+  return (
+    <div className={css.field}>
+      <div className={css.head}>
+        <label className={css.label} htmlFor={props.id}>{props.label}</label>
+        {props.overridden
+          ? (
+            <span className={css.badges}>
+              <span className={css.badge}>{props.overriddenLabel}</span>
+              <button
+                type="button"
+                className={css.reset}
+                disabled={props.disabled}
+                onClick={props.onReset}
+              >
+                {props.resetLabel}
+              </button>
+            </span>
+          )
+          : null}
+      </div>
+      <label className={css.toggle}>
+        <input
+          id={props.id}
+          type="checkbox"
+          checked={props.text === 'true'}
+          disabled={props.disabled}
+          onChange={(event) => { props.onToggle(event.target.checked) }}
+        />
+        <span>{props.text === 'true' ? props.enabledLabel : props.disabledLabel}</span>
+      </label>
+      {props.invalid ? <p className={css.invalid}>{props.invalidLabel}</p> : null}
+    </div>
+  )
+}
+
 /**
  * A write-only credential control. The value never rides a response, so the
  * control reports only whether one is configured and starts blank; a blank

@@ -335,8 +335,20 @@ describe('WebSearchCard', () => {
   function renderWebSearch(state: Partial<WebSearchCardState> = {}) {
     const store = createSnapshotStore<WebSearchCardState>({
       ...settled,
-      baseURL: field(''),
-      maxUses: field('5'),
+      provider: field('deepseek-official'),
+      providerOptions: [
+        { id: 'deepseek-official', labelKey: 'webSearchProviderDeepSeek', available: true },
+        { id: 'openai-responses', labelKey: 'webSearchProviderOpenAI', available: true },
+      ],
+      providerId: 'deepseek-official',
+      providerFields: {
+        providerId: 'deepseek-official',
+        baseURL: field(''),
+        model: field('deepseek-v4-flash'),
+        apiVersion: field('2023-06-01'),
+        maxTokens: field('4096'),
+        maxUses: field('5'),
+      },
       apiKey: field(''),
       apiKeyConfigured: false,
       apiKeyWritable: true,
@@ -381,8 +393,14 @@ describe('WebSearchCard', () => {
 
   it('stages the endpoint, the search budget, and their resets', () => {
     const actions = renderWebSearch({
-      baseURL: field('https://search.test/v1', { overridden: true }),
-      maxUses: field('3', { overridden: true }),
+      providerFields: {
+        providerId: 'deepseek-official',
+        baseURL: field('https://search.test/v1', { overridden: true }),
+        model: field('deepseek-v4-flash'),
+        apiVersion: field('2023-06-01'),
+        maxTokens: field('4096'),
+        maxUses: field('3', { overridden: true }),
+      },
     })
     fireEvent.click(screen.getByText(en.webSearchTitle))
 
@@ -397,5 +415,37 @@ describe('WebSearchCard', () => {
       ['maxUses', '4'],
     ])
     expect(actions.resetField.mock.calls).toEqual([['baseURL'], ['maxUses']])
+  })
+
+  it('switches the visible controls to the selected provider', () => {
+    const actions = renderWebSearch()
+    fireEvent.click(screen.getByText(en.webSearchTitle))
+
+    fireEvent.change(screen.getByLabelText(en.webSearchProvider), { target: { value: 'openai-responses' } })
+
+    expect(actions.edit).toHaveBeenCalledWith('searchProvider', 'openai-responses')
+  })
+
+  it('renders the OpenAI-specific request controls', () => {
+    renderWebSearch({
+      provider: field('openai-responses'),
+      providerId: 'openai-responses',
+      providerFields: {
+        providerId: 'openai-responses',
+        baseURL: field('https://api.openai.test/v1'),
+        model: field('gpt-5.5'),
+        maxOutputTokens: field('512'),
+        allowedDomains: field('openai.com'),
+        blockedDomains: field('example.com'),
+        externalWebAccess: field('true'),
+      },
+    })
+    fireEvent.click(screen.getByText(en.webSearchTitle))
+
+    expect(screen.getByLabelText(en.webSearchMaxOutputTokens)).toHaveProperty('value', '512')
+    expect(screen.getByLabelText(en.webSearchAllowedDomains)).toHaveProperty('value', 'openai.com')
+    expect(screen.getByLabelText(en.webSearchBlockedDomains)).toHaveProperty('value', 'example.com')
+    expect(screen.getByLabelText(en.webSearchExternalWebAccess)).toHaveProperty('checked', true)
+    expect(screen.queryByLabelText(en.webSearchApiVersion)).toBeNull()
   })
 })

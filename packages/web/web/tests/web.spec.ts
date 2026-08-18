@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
+import { SettingsProvider, type SettingsNamespace } from '@deepseek-ai/dsh-settings'
 import WebRuntime, {
   WebError,
   type WebFetchProvider,
@@ -24,6 +25,28 @@ function makeFetchProvider(id: string, available: boolean, result: WebFetchResul
 
 const available = true
 const unavailable = false
+
+class MemorySettings extends SettingsProvider {
+  constructor(ctx: Context, private rawDocument: Record<string, unknown>) {
+    super(ctx)
+  }
+
+  readonly writable = true
+
+  protected load(): Promise<Record<string, unknown>> {
+    return Promise.resolve(structuredClone(this.rawDocument))
+  }
+
+  protected persist(ns: SettingsNamespace, section: Record<string, unknown>): Promise<void> {
+    this.rawDocument[ns] = structuredClone(section)
+    return Promise.resolve()
+  }
+
+  push(document: Record<string, unknown>): void {
+    this.rawDocument = structuredClone(document)
+    this.publish(structuredClone(document))
+  }
+}
 
 function searchResult(marker: string, overrides: Partial<WebSearchResult> = {}): WebSearchResult {
   return { content: marker, sources: [], truncated: false, ...overrides }
@@ -76,6 +99,22 @@ describe('WebRuntime registration', () => {
 })
 
 describe('WebRuntime execution resolution', () => {
+  it('reads a saved provider selection live at execution time', async () => {
+    const ctx = new Context()
+    await ctx.plugin(WebRuntime)
+    await ctx.plugin(MemorySettings, { web: { searchProvider: 'exa' } })
+    const settings = ctx.settings as MemorySettings
+    const web = ctx.web
+    web.registerSearchProvider(makeSearchProvider('exa', available, () => Promise.resolve(searchResult('exa'))))
+    web.registerSearchProvider(makeSearchProvider('perplexity', available, () => Promise.resolve(searchResult('perplexity'))))
+
+    await expect(web.search({ query: 'q' })).resolves.toMatchObject({ content: 'exa' })
+    settings.push({ web: { searchProvider: 'perplexity' } })
+    await vi.waitFor(async () => {
+      await expect(web.search({ query: 'q' })).resolves.toMatchObject({ content: 'perplexity' })
+    })
+  })
+
   it('throws WEB_PROVIDER_UNAVAILABLE when nothing is registered', async () => {
     const { web } = await mountWeb()
     await expect(web.search({ query: 'q' })).rejects.toThrow(expect.objectContaining({ code: 'WEB_PROVIDER_UNAVAILABLE' }))

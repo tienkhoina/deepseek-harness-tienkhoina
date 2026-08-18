@@ -29,7 +29,15 @@ import type { PluginsSettingsSectionInjected, PluginsSettingsTabEntry } from './
 import { WebSearchCard } from './WebSearchCard.tsx'
 import { AGENT_LOOP_NS, AgentLoopCardController } from './agent-loop-card-controller.ts'
 import { SHELL_NS, BashCardController } from './bash-card-controller.ts'
-import { WEB_SEARCH_NS, WebSearchCardController } from './web-search-card-controller.ts'
+import type { SettingsScope } from '@deepseek-ai/dsh-client-runtime/client'
+import {
+  WEB_SEARCH_DEEPSEEK_NS,
+  WEB_SEARCH_OPENAI_NS,
+  WEB_SETTINGS_NS,
+  WebSearchCardController,
+  type WebSearchProviderId,
+  type WebSearchSettings,
+} from './web-search-card-controller.ts'
 import { en, zh } from './locales.ts'
 
 export type { PluginsSettingsSectionInjected, PluginsSettingsSectionProps } from './PluginsSettingsSection.tsx'
@@ -61,7 +69,15 @@ export function apply(ctx: ClientContext): void {
 
   const bash = new BashCardController(ctx.settingsScope.bind({ namespace: SHELL_NS }))
   const agentLoop = new AgentLoopCardController(ctx.settingsScope.bind({ namespace: AGENT_LOOP_NS }))
-  const webSearch = new WebSearchCardController(ctx.settingsScope.bind({ namespace: WEB_SEARCH_NS }), api)
+  const webSearchScopes = new Map<WebSearchProviderId, SettingsScope<WebSearchSettings>>([
+    ['deepseek-official', ctx.settingsScope.bind({ namespace: WEB_SEARCH_DEEPSEEK_NS })],
+    ['openai-responses', ctx.settingsScope.bind({ namespace: WEB_SEARCH_OPENAI_NS })],
+  ])
+  const webSearch = new WebSearchCardController(
+    ctx.settingsScope.bind({ namespace: WEB_SETTINGS_NS }),
+    webSearchScopes,
+    api,
+  )
 
   // The credential a card reports is not part of any settings section, so its
   // scope publishes nothing when one is written. This is the only signal that

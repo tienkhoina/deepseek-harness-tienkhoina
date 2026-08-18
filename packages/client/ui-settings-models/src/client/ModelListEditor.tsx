@@ -44,6 +44,64 @@ function numberOf(model: ModelDraft, key: string): number | undefined {
   return typeof value === 'number' ? value : undefined
 }
 
+/** Convert array field to comma-separated string for display. */
+function arrayToText(model: ModelDraft, key: string): string {
+  const value = model[key]
+  if (Array.isArray(value)) return value.join(',')
+  if (typeof value === 'string') return value
+  return ''
+}
+
+/** Parse comma-separated string to array, or return undefined if empty. */
+function textToArray(text: string): string[] | undefined {
+  const trimmed = text.trim()
+  if (trimmed === '') return undefined
+  return trimmed.split(',').map(s => s.trim()).filter(s => s.length > 0)
+}
+
+/** Convert reasoningEfforts field to display text. */
+function reasoningEffortsToText(model: ModelDraft): string {
+  const value = model['reasoningEfforts']
+  if (value === false) return 'false'
+  if (typeof value === 'object' && value !== null) {
+    // Extract the highest level from the object
+    const levels = Object.keys(value)
+    const order = ['low', 'medium', 'high', 'xhigh', 'max']
+    const highest = levels.reduce((max, level) => {
+      const maxIdx = order.indexOf(max)
+      const levelIdx = order.indexOf(level)
+      return levelIdx > maxIdx ? level : max
+    }, 'low')
+    return highest
+  }
+  if (typeof value === 'string') return value
+  return ''
+}
+
+/** Parse reasoningEfforts text to object or false. */
+function textToReasoningEfforts(text: string): false | Record<string, string> | undefined {
+  const trimmed = text.trim()
+  if (trimmed === '') return undefined
+  if (trimmed === 'false') return false
+
+  // Define the effort level order
+  const order = ['low', 'medium', 'high', 'xhigh', 'max']
+  const maxLevel = trimmed.toLowerCase()
+
+  // Validate the input
+  if (!order.includes(maxLevel)) {
+    // If invalid, default to 'high'
+    const defaultMaxIdx = order.indexOf('high')
+    const range = order.slice(0, defaultMaxIdx + 1)
+    return Object.fromEntries(range.map(e => [e, e]))
+  }
+
+  // Create range from low to maxLevel
+  const maxIdx = order.indexOf(maxLevel)
+  const range = order.slice(0, maxIdx + 1)
+  return Object.fromEntries(range.map(e => [e, e]))
+}
+
 /** What an interrogation needs, taken from the live form. */
 export interface ProbeTarget {
   /** Settings namespace whose adapter family answers. */
@@ -210,7 +268,7 @@ export function ModelListEditor(props: ModelListEditorProps): ReactNode {
     })
   }
 
-  const patch = (index: number, next: Record<string, string | number | undefined>): void => {
+  const patch = (index: number, next: Record<string, unknown>): void => {
     onChange(models.map((model, at) => {
       if (at !== index) return model
       // Rebuilt rather than spread over: an emptied optional field has to leave
@@ -391,6 +449,42 @@ export function ModelListEditor(props: ModelListEditorProps): ReactNode {
           {expanded.has(index)
             ? (
               <div className={styles['modelAdvanced']}>
+                <label className={styles['modelField']}>
+                  <span className={styles['modelFieldLabel']}>{t('modelDescription')}</span>
+                  <input
+                    className={styles['input']}
+                    type="text"
+                    value={textOf(model, 'description')}
+                    placeholder={t('modelDescriptionPlaceholder')}
+                    aria-label={`${t('modelDescription')} ${index + 1}`}
+                    disabled={disabled}
+                    onChange={(event) => { patch(index, { description: event.target.value === '' ? undefined : event.target.value }) }}
+                  />
+                </label>
+                <label className={styles['modelField']}>
+                  <span className={styles['modelFieldLabel']}>{t('modelInputModalities')}</span>
+                  <input
+                    className={styles['input']}
+                    type="text"
+                    value={arrayToText(model, 'input')}
+                    placeholder={t('modelInputModalitiesPlaceholder')}
+                    aria-label={`${t('modelInputModalities')} ${index + 1}`}
+                    disabled={disabled}
+                    onChange={(event) => { patch(index, { input: textToArray(event.target.value) }) }}
+                  />
+                </label>
+                <label className={styles['modelField']}>
+                  <span className={styles['modelFieldLabel']}>{t('modelReasoningEfforts')}</span>
+                  <input
+                    className={styles['input']}
+                    type="text"
+                    value={reasoningEffortsToText(model)}
+                    placeholder={t('modelReasoningEffortsPlaceholder')}
+                    aria-label={`${t('modelReasoningEfforts')} ${index + 1}`}
+                    disabled={disabled}
+                    onChange={(event) => { patch(index, { reasoningEfforts: textToReasoningEfforts(event.target.value) }) }}
+                  />
+                </label>
                 <label className={styles['modelField']}>
                   <span className={styles['modelFieldLabel']}>{t('modelContextWindow')}</span>
                   <input

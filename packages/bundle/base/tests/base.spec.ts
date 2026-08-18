@@ -32,6 +32,8 @@ describe('dsh-base bundle', () => {
     )
     expect(rows.length).toBeGreaterThan(50)
     expect(rows.some(row => row.id === 'agent-loop')).toBe(true)
+    expect(rows.find(row => row.id === 'web-search-openai')?.config?.['apiKeyEnv']).toBe('OPENAI_API_KEY')
+    expect(manifest.dependencies).toHaveProperty('@deepseek-ai/dsh-web-search-openai', 'workspace:^')
     expect(rows.find(row => row.id === 'session-telemetry-otel')?.config?.['mode']).toEqual({
       __jsExpr: "process.env.DSH_TELEMETRY_MODE || 'DISABLED'",
     })

@@ -17,7 +17,7 @@ import styles from './ModelsSection.module.css'
 export type DeepSeekModelDraft = Record<string, unknown>
 
 /** The catalog fields this editor writes. */
-type CatalogField = 'id' | 'name' | 'contextWindow' | 'maxTokens'
+type CatalogField = 'id' | 'name' | 'description' | 'contextWindow' | 'maxTokens'
 
 /** The two token counts edited as K/M-suffixed text behind a row's disclosure. */
 type CapacityField = 'contextWindow' | 'maxTokens'
@@ -341,6 +341,18 @@ export function DeepSeekModelsEditor(props: DeepSeekModelsEditorProps): ReactNod
                 {expanded.has(index)
                   ? (
                     <div className={styles['modelAdvanced']}>
+                      <label className={styles['modelField']}>
+                        <span className={styles['modelFieldLabel']}>{props.t('modelDescription')}</span>
+                        <input
+                          className={styles['input']}
+                          type="text"
+                          value={typeof model['description'] === 'string' ? model['description'] : ''}
+                          placeholder={props.t('modelDescriptionPlaceholder')}
+                          aria-label={`${props.t('modelDescription')} ${String(index + 1)}`}
+                          disabled={props.disabled}
+                          onChange={(event) => { update(index, 'description', event.target.value === '' ? undefined : event.target.value) }}
+                        />
+                      </label>
                       {capacityField(model, index, 'contextWindow', props.defaultContextWindow)}
                       {capacityField(model, index, 'maxTokens', props.defaultMaxTokens)}
                     </div>

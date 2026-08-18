@@ -411,6 +411,14 @@
       config:
         apiKeyEnv: DEEPSEEK_API_KEY
 
+    # OpenAI Responses is mounted as an explicit alternative. The web row above
+    # keeps DeepSeek selected until an overlay sets searchProvider to
+    # openai-responses.
+    - id: web-search-openai
+      name: '@deepseek-ai/dsh-web-search-openai'
+      config:
+        apiKeyEnv: OPENAI_API_KEY
+
     - id: tool-web
       name: '@deepseek-ai/dsh-tool-web'
       config:

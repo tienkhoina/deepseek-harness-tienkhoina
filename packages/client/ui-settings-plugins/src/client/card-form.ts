@@ -145,6 +145,38 @@ export function textField(field: string): CardFieldSpec {
   }
 }
 
+/** A boolean field represented as `true` or `false` draft text. */
+export function booleanField(field: string): CardFieldSpec {
+  return {
+    field,
+    format: value => typeof value === 'boolean' ? String(value) : '',
+    parse: (text) => {
+      const trimmed = text.trim().toLowerCase()
+      if (trimmed === '') return { kind: 'clear' }
+      if (trimmed === 'true') return { kind: 'set', value: true }
+      if (trimmed === 'false') return { kind: 'set', value: false }
+      return undefined
+    },
+  }
+}
+
+/** A string-array field rendered as comma- or newline-separated values. */
+export function listField(field: string): CardFieldSpec {
+  return {
+    field,
+    format: value => Array.isArray(value) && value.every(item => typeof item === 'string')
+      ? value.join(', ')
+      : '',
+    parse: (text) => {
+      const values = text
+        .split(/[\n,]/u)
+        .map(value => value.trim())
+        .filter(value => value.length > 0)
+      return values.length === 0 ? { kind: 'clear' } : { kind: 'set', value: values }
+    },
+  }
+}
+
 /**
  * Stages one card's edits over one settings namespace and writes them on save.
  *
@@ -184,6 +216,17 @@ export class CardForm<T> {
     const store = createSnapshotStore(project())
     this.listeners.add(() => { store.set(project()) })
     return store
+  }
+
+  /** Observe form changes without binding a component snapshot. */
+  subscribe(listener: () => void): () => void {
+    this.listeners.add(listener)
+    return () => { this.listeners.delete(listener) }
+  }
+
+  /** Read the scope snapshot used by this form's credential bridge. */
+  snapshot(): SettingsScopeSnapshot<T> {
+    return this.snapshotOf()
   }
 
   /**

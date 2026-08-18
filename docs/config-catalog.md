@@ -2862,7 +2862,7 @@ export interface WebRuntimeConfig {
 }
 ```
 
-Source: [`packages/web/web/src/index.ts:55`](../packages/web/web/src/index.ts)
+Source: [`packages/web/web/src/index.ts:56`](../packages/web/web/src/index.ts)
 
 <a id="deepseek-aidsh-web-app"></a>
 
@@ -2966,6 +2966,36 @@ export interface Config {
 ```
 
 Source: [`packages/web/web-search-exa/src/index.ts:38`](../packages/web/web-search-exa/src/index.ts)
+
+<a id="deepseek-aidsh-web-search-openai"></a>
+
+## `@deepseek-ai/dsh-web-search-openai`
+
+Requires: `web`
+
+```ts config-catalog
+/** Plugin configuration. All values except the secret are safe to expose in a config catalog. */
+export interface Config {
+  /** Literal OpenAI API key; prefer {@link apiKeyEnv} for deployment configuration. */
+  apiKey?: string
+  /** Credential reference resolved for each search. */
+  apiKeyEnv?: string
+  /** Endpoint base; `/responses` is appended. */
+  baseURL?: string
+  /** Responses model name. */
+  model?: string
+  /** Optional maximum output-token budget for the auxiliary request. */
+  maxOutputTokens?: number
+  /** Optional domain allowlist passed to OpenAI web search. */
+  allowedDomains?: string[]
+  /** Optional domain blocklist passed to OpenAI web search. */
+  blockedDomains?: string[]
+  /** Set false to use cached/indexed results without live external access. */
+  externalWebAccess?: boolean
+}
+```
+
+Source: [`packages/web/web-search-openai/src/index.ts:62`](../packages/web/web-search-openai/src/index.ts)
 
 <a id="deepseek-aidsh-web-search-perplexity"></a>
 

@@ -1,24 +1,26 @@
 /**
  * File-backed credentials provider over `$DSH_HOME/.credentials.yaml`, layered
- * against the environment by how much each layer is trusted:
+ * against the environment with UI-configured credentials taking precedence:
  *
  * ```text
- * inherited process environment      (read-only, wins)
- * > $DSH_HOME/.credentials.yaml      (provider-managed, writable)
- * > <invocation cwd>/.env            (read-only fallback)
- * > $DSH_HOME/.env                   (read-only fallback)
+ * $DSH_HOME/.credentials.yaml        (UI-managed, highest priority)
+ * > inherited process environment    (fallback)
+ * > <invocation cwd>/.env            (fallback)
+ * > $DSH_HOME/.env                   (fallback)
  * ```
  *
- * The inherited environment wins because `DEEPSEEK_API_KEY=… dsh`, a CI
- * secret, or a container `-e` is this run's explicit intent; it cannot be
- * edited from inside, so it must be *visibly* read-only rather than silently
- * shadow writes. Everything below it loses to the managed store, so a key the
- * Models page writes takes effect immediately even when an older key sits in
- * the user's `.env`.
+ * The managed credentials file wins because explicit user configuration through
+ * the Models page or settings UI represents the user's current intent and must
+ * always be respected. When a credential is stored via UI, it takes effect
+ * immediately and overrides any environment variables or .env files.
  *
- * The invoking project may supply a key, because the product trusts the
- * project it is launched in. It ranks below the managed store, so a key stored
- * through the Models page is never displaced by one a checkout happens to carry.
+ * The inherited environment and .env files serve as convenient fallbacks when
+ * no explicit credential is stored, allowing CI secrets, container `-e` flags,
+ * and project-local keys to work without additional configuration.
+ *
+ * The invoking project may supply a key via .env because the product trusts the
+ * project it is launched in. It ranks below both the managed store and inherited
+ * environment, so a key stored through the UI or set in the shell always wins.
  *
  * The file is the provider-managed writable source: every write re-reads the
  * document under a cross-process writer lock before patching only its own key
@@ -307,24 +309,25 @@ export class LocalCredentialProvider extends CredentialProvider {
   }
 
   override resolve(ref: CredentialRef): Promise<ResolvedCredential | undefined> {
-    const inherited = this.inherited(ref)
-    if (inherited !== undefined) return Promise.resolve({ value: inherited, source: 'env' })
     const stored = this.values.get(ref)
     if (stored !== undefined) return Promise.resolve({ value: stored, source: 'file' })
+    const inherited = this.inherited(ref)
+    if (inherited !== undefined) return Promise.resolve({ value: inherited, source: 'env' })
     const fallback = this.dotenvFallback(ref)
     if (fallback !== undefined) return Promise.resolve({ value: fallback.value, source: fallback.source })
     return Promise.resolve(undefined)
   }
 
   override describe(ref: CredentialRef): Promise<CredentialInfo> {
-    // Only the inherited environment is unwritable: it is the one layer this
-    // process cannot edit. A user `.env` value is writable in the sense that
-    // matters — storing a key replaces it as the effective one.
-    if (this.inherited(ref) !== undefined) {
-      return Promise.resolve({ configured: true, source: 'env', writable: false })
-    }
+    // UI-configured credentials in .credentials.yaml take precedence over all
+    // other sources, ensuring user configuration through the Models page or
+    // settings UI is always respected. Environment and .env files serve as
+    // fallbacks when no explicit credential is stored.
     const stored = this.values.get(ref)
     if (stored !== undefined) return Promise.resolve({ configured: true, source: 'file', writable: true })
+    if (this.inherited(ref) !== undefined) {
+      return Promise.resolve({ configured: true, source: 'env', writable: true })
+    }
     const fallback = this.dotenvFallback(ref)
     if (fallback !== undefined) return Promise.resolve({ configured: true, source: fallback.source, writable: true })
     return Promise.resolve({ configured: false, writable: true })
@@ -403,17 +406,12 @@ export class LocalCredentialProvider extends CredentialProvider {
   }
 
   /**
-   * Reject a write the inherited environment would shadow into apparent
-   * no-effect. Only that layer can shadow a write: everything else this
-   * provider resolves ranks below the document being written.
+   * Reject a write when it would appear to have no effect. Since UI-configured
+   * credentials now take precedence, all writes are allowed - the stored value
+   * will always be the one used.
    */
-  private assertUnshadowed(ref: CredentialRef, verb: 'set' | 'unset'): void {
-    if (this.inherited(ref) !== undefined) {
-      throw new Error(
-        `credentials-local: "${ref}" is supplied read-only by the launching environment, so ${verb} would be`
-        + ' shadowed; unset it in the shell you start dsh from instead',
-      )
-    }
+  private assertUnshadowed(_ref: CredentialRef, _verb: 'set' | 'unset'): void {
+    // No shadowing check needed: .credentials.yaml always wins
   }
 
   /**

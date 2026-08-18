@@ -11,6 +11,7 @@ This package owns the Service Definition role of the web capability. Unlike shel
 | `@deepseek-ai/dsh-web` (this) | Service Definition: the service, provider registries, selection policy, request/result vocabulary, the `WebError` taxonomy |
 | `@deepseek-ai/dsh-web-search-exa` | Search provider: Exa |
 | `@deepseek-ai/dsh-web-search-perplexity` | Search provider: Perplexity |
+| `@deepseek-ai/dsh-web-search-openai` | Search provider: OpenAI Responses native web search |
 | `@deepseek-ai/dsh-web-fetch-http` | Fetch provider: anonymous public HTTP(S) |
 | `@deepseek-ai/dsh-tool-web` | Consumer: the model-facing `web_search` / `web_fetch` tool schemas over `ctx.web` |
 
@@ -40,6 +41,8 @@ Selection never depends on registration, config, or HMR order. A capability has 
 | no id, multiple usable providers | `WEB_PROVIDER_AMBIGUOUS` |
 
 The failure branches throw `WebError`, whose structured code (plus message detail — the missing id, the ambiguous candidate set) is the direct callers route on. A provider's own `available()` is a cheap local check (credential presence, parseable config) that feeds this execution-time selection and **must not make network calls**; `dsh-tool-web` never calls it — the tool executes through `ctx.web.search()`/`fetch()` and routes on the thrown codes, so provider selection has one owner.
+
+`WebRuntime` registers the `web` Settings section. Its `searchProvider` and `fetchProvider` values use the same selection ids as Cordis config and are read at execution time, so the Plugins settings card can switch a registered search provider without reloading the service. Provider-specific fields remain in the settings namespace owned by each provider.
 
 ## Vocabulary
 

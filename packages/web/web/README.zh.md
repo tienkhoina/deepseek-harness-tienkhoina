@@ -11,6 +11,7 @@
 | `@deepseek-ai/dsh-web`（本包） | Service Definition：服务、提供方注册表、选择策略、请求／结果词汇、`WebError` 分类体系 |
 | `@deepseek-ai/dsh-web-search-exa` | 搜索提供方：Exa |
 | `@deepseek-ai/dsh-web-search-perplexity` | 搜索提供方：Perplexity |
+| `@deepseek-ai/dsh-web-search-openai` | 搜索提供方：OpenAI Responses 原生 web 搜索 |
 | `@deepseek-ai/dsh-web-fetch-http` | 抓取提供方：匿名公共 HTTP(S) |
 | `@deepseek-ai/dsh-tool-web` | Consumer：面向模型的 `web_search`／`web_fetch` 工具 schema，构建于 `ctx.web` 之上 |
 
@@ -40,6 +41,8 @@
 | 无 id，多个可用提供方 | `WEB_PROVIDER_AMBIGUOUS` |
 
 失败分支会抛出 `WebError`；调用方按其结构化 code（加消息细节：缺失 id、歧义候选集合）路由。提供方自身的 `available()` 是便宜的局部检查（凭据是否存在、配置是否可解析），供执行时选择使用，且**禁止发起网络调用**；`dsh-tool-web` 永远不会调用它。工具通过 `ctx.web.search()`／`fetch()` 执行，并按抛出的 code 路由，因此提供方选择只有一个归属方。
+
+`WebRuntime` 注册 `web` Settings 分节。其 `searchProvider` 与 `fetchProvider` 使用和 Cordis 配置相同的选择 id，并在执行时读取，因此 Plugins 设置卡片可以切换已注册的搜索提供方而无需重载服务。提供方特有字段仍保留在各提供方拥有的 settings 命名空间中。
 
 ## 词汇
 

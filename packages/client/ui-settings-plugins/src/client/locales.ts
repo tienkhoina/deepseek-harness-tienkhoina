@@ -9,8 +9,15 @@ export type PluginsSettingsLocaleKey =
   | 'bashMaxOutputBytes' | 'bashMaxOutputBytesHint'
   | 'agentLoopTitle' | 'agentLoopDescription' | 'agentLoopMaxParallel' | 'agentLoopMaxParallelHint'
   | 'webSearchTitle' | 'webSearchDescription'
+  | 'webSearchProvider' | 'webSearchProviderHint' | 'webSearchProviderDeepSeek' | 'webSearchProviderOpenAI'
   | 'webSearchApiKey' | 'webSearchApiKeyHint' | 'webSearchApiKeySet' | 'webSearchApiKeyUnset'
-  | 'webSearchBaseUrl' | 'webSearchBaseUrlHint' | 'webSearchMaxUses' | 'webSearchMaxUsesHint'
+  | 'webSearchBaseUrl' | 'webSearchBaseUrlHint' | 'webSearchModel' | 'webSearchModelHint'
+  | 'webSearchApiVersion' | 'webSearchApiVersionHint'
+  | 'webSearchMaxTokens' | 'webSearchMaxTokensHint' | 'webSearchMaxUses' | 'webSearchMaxUsesHint'
+  | 'webSearchMaxOutputTokens' | 'webSearchMaxOutputTokensHint'
+  | 'webSearchAllowedDomains' | 'webSearchAllowedDomainsHint'
+  | 'webSearchBlockedDomains' | 'webSearchBlockedDomainsHint'
+  | 'webSearchExternalWebAccess' | 'webSearchExternalWebAccessHint' | 'webSearchEnabled' | 'webSearchDisabled'
 
 /** English copy. */
 export const en: Record<PluginsSettingsLocaleKey, string> = {
@@ -42,15 +49,35 @@ export const en: Record<PluginsSettingsLocaleKey, string> = {
   agentLoopMaxParallel: 'Parallel tool calls',
   agentLoopMaxParallelHint: 'Upper bound on parallel-safe calls running at once within one step.',
   webSearchTitle: 'Web search',
-  webSearchDescription: 'The DeepSeek search provider.',
+  webSearchDescription: 'Choose a registered provider and configure its request settings.',
+  webSearchProvider: 'Search provider',
+  webSearchProviderHint: 'The registered provider that handles web searches.',
+  webSearchProviderDeepSeek: 'DeepSeek',
+  webSearchProviderOpenAI: 'OpenAI Responses',
   webSearchApiKey: 'API key',
   webSearchApiKeyHint: 'Stored outside the settings file. Leave blank to keep the current key.',
   webSearchApiKeySet: 'A key is configured.',
   webSearchApiKeyUnset: 'No key is configured; search is unavailable until one is.',
   webSearchBaseUrl: 'Endpoint',
   webSearchBaseUrlHint: 'Leave blank to use the provider default.',
+  webSearchModel: 'Model',
+  webSearchModelHint: 'Model used for the auxiliary search request.',
+  webSearchApiVersion: 'API version',
+  webSearchApiVersionHint: 'Protocol version sent to the DeepSeek Messages endpoint.',
+  webSearchMaxTokens: 'Max output tokens',
+  webSearchMaxTokensHint: 'Upper bound for DeepSeek auxiliary response tokens.',
   webSearchMaxUses: 'Max searches per request',
   webSearchMaxUsesHint: 'How many times one request may search before it must answer.',
+  webSearchMaxOutputTokens: 'Max output tokens',
+  webSearchMaxOutputTokensHint: 'Optional upper bound for the OpenAI Responses output.',
+  webSearchAllowedDomains: 'Allowed domains',
+  webSearchAllowedDomainsHint: 'Comma- or newline-separated domains OpenAI may search.',
+  webSearchBlockedDomains: 'Blocked domains',
+  webSearchBlockedDomainsHint: 'Comma- or newline-separated domains OpenAI must not search.',
+  webSearchExternalWebAccess: 'Live external web access',
+  webSearchExternalWebAccessHint: 'Allow OpenAI web search to use live external sources.',
+  webSearchEnabled: 'Enabled',
+  webSearchDisabled: 'Disabled',
 }
 
 /** Simplified Chinese copy. */
@@ -83,13 +110,33 @@ export const zh: Record<PluginsSettingsLocaleKey, string> = {
   agentLoopMaxParallel: '并行工具调用数',
   agentLoopMaxParallelHint: '同一步内最多同时运行多少个可并行的调用。',
   webSearchTitle: '网页搜索',
-  webSearchDescription: 'DeepSeek 搜索提供方。',
+  webSearchDescription: '选择已注册的提供方，并配置其请求参数。',
+  webSearchProvider: '搜索提供方',
+  webSearchProviderHint: '处理网页搜索的已注册提供方。',
+  webSearchProviderDeepSeek: 'DeepSeek',
+  webSearchProviderOpenAI: 'OpenAI Responses',
   webSearchApiKey: 'API Key',
   webSearchApiKeyHint: '不写入设置文件。留空表示保持当前密钥。',
   webSearchApiKeySet: '已配置密钥。',
   webSearchApiKeyUnset: '未配置密钥；配置之前搜索不可用。',
   webSearchBaseUrl: '接口地址',
   webSearchBaseUrlHint: '留空则使用提供方默认地址。',
+  webSearchModel: '模型',
+  webSearchModelHint: '辅助搜索请求使用的模型。',
+  webSearchApiVersion: 'API 版本',
+  webSearchApiVersionHint: '发送到 DeepSeek Messages 接口的协议版本。',
+  webSearchMaxTokens: '最大输出 Token 数',
+  webSearchMaxTokensHint: 'DeepSeek 辅助响应允许生成的最大 Token 数。',
   webSearchMaxUses: '单次请求最多搜索次数',
   webSearchMaxUsesHint: '一次请求在必须作答前最多可以搜索多少次。',
+  webSearchMaxOutputTokens: '最大输出 Token 数',
+  webSearchMaxOutputTokensHint: 'OpenAI Responses 可选的最大输出 Token 数。',
+  webSearchAllowedDomains: '允许的域名',
+  webSearchAllowedDomainsHint: 'OpenAI 可搜索的域名，用逗号或换行分隔。',
+  webSearchBlockedDomains: '屏蔽的域名',
+  webSearchBlockedDomainsHint: 'OpenAI 不得搜索的域名，用逗号或换行分隔。',
+  webSearchExternalWebAccess: '实时外部网页访问',
+  webSearchExternalWebAccessHint: '允许 OpenAI 网页搜索使用实时外部来源。',
+  webSearchEnabled: '已启用',
+  webSearchDisabled: '已停用',
 }

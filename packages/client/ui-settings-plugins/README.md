@@ -8,11 +8,13 @@ The **Plugins** settings section and its **Plugin configuration** tab. The secti
 
 A card renders only when its namespace is both registered by a live Host plugin and served to the browser. A deployment that does not compose the owning plugin — or serves the namespace to no client — renders nothing for it rather than an empty or disabled card, so the configurable tab reflects what this deployment actually runs.
 
-The first batch covers the shell executor (`bash`), the agent loop's tool-call parallelism (`agent-loop`), and the DeepSeek search provider (`web-search-deepseek`).
+The first batch covers the shell executor (`bash`), the agent loop's tool-call parallelism (`agent-loop`), and web search. The web-search card selects between the registered DeepSeek (`deepseek-official`) and OpenAI Responses (`openai-responses`) providers, then renders only the selected provider's fields.
+
+The web-search selector writes the live `web` settings namespace. Provider fields write their own `web-search-deepseek` or `web-search-openai` namespace, while each provider's API key is written through credentials under its provider-specific reference. The OpenAI card includes its endpoint, model, output-token limit, domain filters, and external-access switch; DeepSeek keeps its endpoint, model, API version, token limit, and search-use limit.
 
 ## Extension point
 
-The section declares `settings.plugins.tab`, a root list slot whose labels become ordered tabs. It keeps a tab mounted after its first selection, so local drafts and read-only snapshots survive tab switches. The package registers its own `configurable` contribution, which declares the nested `settings.plugin.item` list slot. A plugin that ships a browser half registers its own card into that nested slot and owns its controls; this package neither enumerates namespaces nor renders a form it was not given. Both levels follow the contribution's `order`.
+The section declares `settings.plugins.tab`, a root list slot whose labels become ordered tabs. It keeps a tab mounted after its first selection, so local drafts and read-only snapshots survive tab switches. The package registers its own `configurable` contribution, which declares the nested `settings.plugin.item` list slot. A plugin that ships a browser half registers its own card into that nested slot and owns its controls; the web-search card is the package-owned provider catalog because one card coordinates the shared selector with provider-specific namespaces. Both levels follow the contribution's `order`.
 
 ## Writes
 
@@ -36,5 +38,6 @@ None; this package neither assembles nor sends a provider request.
 
 - **Only host-plane plugins appear** — a plugin an agent preset mounts carries its configuration inline in that preset's `agent.cordis.yml` and cannot register a settings namespace at all (a second session mounting the same preset would fail on a duplicate registration), so this section lists nothing for it. Editing those values remains the preset editor's job.
 - **Exposure is a Host allowlist, not a plugin declaration** — a namespace absent from the api-proxy's allowlist answers `settings-not-exposed` even when its owner registered it, so a plugin distributed outside this repository cannot surface its own configuration here without a change in `packages/host/apiproxy`.
+- **The web-search catalog is explicit** — the card currently describes the DeepSeek and OpenAI Responses providers; adding another provider requires a client catalog entry and its provider-specific field renderer alongside the provider settings namespace.
 - **The shell card follows the composed executor** — the POSIX and PowerShell executor families share the `bash` namespace because a host composes exactly one of them, so the served schema differs by platform (PowerShell adds `pwshPath`) even though the card edits the same two fields on both, and a deployment composing neither shows no card.
 - **The empty line counts registered cards, not visible ones** — a card whose namespace this deployment does not expose renders nothing, but still counts, so a deployment that exposes none shows an empty list rather than the empty line. The count is also read once, because the renderer caches a root entry's inject face; a card registered later does not raise it.

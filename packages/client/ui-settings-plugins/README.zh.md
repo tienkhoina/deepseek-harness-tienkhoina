@@ -8,11 +8,13 @@
 
 只有当某个命名空间既被存活的 Host 插件注册、又被服务给浏览器时，它的卡片才会渲染。未组装该插件的部署——或未向任何客户端服务该命名空间的部署——不会渲染空卡片或禁用卡片，而是什么都不渲染，因此“插件配置”标签页反映的是该部署实际运行的东西。
 
-第一批覆盖 shell 执行器（`bash`）、agent 循环的工具调用并行度（`agent-loop`）以及 DeepSeek 搜索提供方（`web-search-deepseek`）。
+第一批覆盖 shell 执行器（`bash`）、agent 循环的工具调用并行度（`agent-loop`）以及网页搜索。网页搜索卡片在已注册的 DeepSeek（`deepseek-official`）与 OpenAI Responses（`openai-responses`）提供方之间选择，并只显示当前提供方的字段。
+
+网页搜索选择器写入实时生效的 `web` settings 命名空间。提供方字段分别写入 `web-search-deepseek` 或 `web-search-openai` 命名空间；每个提供方的 API Key 则通过 credentials，写入该提供方自己的引用。OpenAI 卡片包含接口地址、模型、输出 Token 上限、域名过滤和外部访问开关；DeepSeek 保留接口地址、模型、API 版本、Token 上限和搜索次数上限。
 
 ## 扩展点
 
-本分区声明根级列表 slot `settings.plugins.tab`，其标签会成为有序标签页。某个标签页首次被选择后会保持挂载，因此本地草稿与只读快照在切换标签页时不会丢失。本包注册自己的 `configurable` 贡献，由它声明嵌套的 `settings.plugin.item` 列表 slot。带浏览器半侧的插件把自己的卡片注册进这个嵌套 slot 并拥有其控件；本包既不枚举命名空间，也不渲染未被交给它的表单。两层排序都遵循贡献的 `order`。
+本分区声明根级列表 slot `settings.plugins.tab`，其标签会成为有序标签页。某个标签页首次被选择后会保持挂载，因此本地草稿与只读快照在切换标签页时不会丢失。本包注册自己的 `configurable` 贡献，由它声明嵌套的 `settings.plugin.item` 列表 slot。带浏览器半侧的插件把自己的卡片注册进这个嵌套 slot 并拥有其控件；网页搜索卡片由本包拥有，因为一张卡片需要协调共享选择器与提供方各自的命名空间。两层排序都遵循贡献的 `order`。
 
 ## 写入
 
@@ -36,5 +38,6 @@
 
 - **只有宿主平面的插件会出现**——由 agent preset 挂载的插件把配置内联在该 preset 的 `agent.cordis.yml` 中，且根本无法注册 settings 命名空间（同一 preset 挂载第二个会话时会因重复注册而失败），因此本分区不会列出它。编辑那些值仍是 preset 编辑器的职责。
 - **暴露是 Host 的白名单，而非插件的声明**——不在 api-proxy 白名单中的命名空间，即便其拥有方已注册，也只会得到 `settings-not-exposed`，因此在本仓库之外分发的插件无法在不改动 `packages/host/apiproxy` 的前提下让自己的配置出现在这里。
+- **网页搜索目录是显式的**——卡片当前描述 DeepSeek 与 OpenAI Responses；增加其他提供方时，需要在客户端目录中加入条目，并为其 settings 命名空间添加对应的字段渲染器。
 - **shell 卡片跟随被组装的执行器**——POSIX 与 PowerShell 两个执行器家族共用 `bash` 命名空间，因为一个宿主只组装其中之一，所以被服务的 schema 随平台不同（PowerShell 多出 `pwshPath`），尽管卡片在两者下编辑的都是同样两个字段；而两者都不组装的部署不会显示这张卡片。
 - **空态数的是已注册卡片，不是可见卡片**——命名空间未被本部署暴露的卡片什么都不渲染，但仍计入数量，因此一个都不暴露的部署看到的是空列表而非那行空态文案。该计数还只读取一次，因为渲染器会缓存根级 entry 的 inject face；之后注册的卡片不会让它变大。
