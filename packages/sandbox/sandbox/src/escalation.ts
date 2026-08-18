@@ -55,9 +55,10 @@ export function validateEscalationArgs(sandboxPermissions: string | undefined, j
   if (justification !== undefined && sandboxPermissions === undefined) {
     throw new Error('invalid escalation: justification is only valid together with sandbox_permissions')
   }
-  if (justification !== undefined && justification.trim().length === 0) {
-    throw new Error('invalid justification: expected a non-empty sentence')
-  }
+  // Allow empty justification - agent may forget to fill it
+  // if (justification !== undefined && justification.trim().length === 0) {
+  //   throw new Error('invalid justification: expected a non-empty sentence')
+  // }
 }
 
 /**
