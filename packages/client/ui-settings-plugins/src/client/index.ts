@@ -23,7 +23,6 @@ import type {} from '@deepseek-ai/dsh-api-remotes/client'
 import { AgentLoopCard } from './AgentLoopCard.tsx'
 import { BashCard } from './BashCard.tsx'
 import { ConfigurablePluginsTab } from './ConfigurablePluginsTab.tsx'
-import type { ConfigurablePluginsTabInjected } from './ConfigurablePluginsTab.tsx'
 import { PluginsSettingsSection } from './PluginsSettingsSection.tsx'
 import type { PluginsSettingsSectionInjected, PluginsSettingsTabEntry } from './PluginsSettingsSection.tsx'
 import { WebSearchCard } from './WebSearchCard.tsx'
@@ -41,7 +40,7 @@ import {
 import { en, zh } from './locales.ts'
 
 export type { PluginsSettingsSectionInjected, PluginsSettingsSectionProps } from './PluginsSettingsSection.tsx'
-export type { ConfigurablePluginsTabInjected, ConfigurablePluginsTabProps } from './ConfigurablePluginsTab.tsx'
+export type { ConfigurablePluginsTabProps } from './ConfigurablePluginsTab.tsx'
 export type { PluginCardProps } from './PluginCard.tsx'
 export type { SettingsPluginItemOwnerProps } from './slot-contract.ts'
 export type { FieldProps } from './fields.tsx'
@@ -142,31 +141,26 @@ export function apply(ctx: ClientContext): void {
     order: 0,
     label: () => t('configurableTab'),
     locale: NS,
-    inject: (): ConfigurablePluginsTabInjected => ({
-      cardCount: ctx.slots.entries('settings.plugin.item').length,
-    }),
-    children: { 'settings.plugin.item': { kind: 'list', scope: 'root' } },
+    inject: () => configurable.inject(),
+    children: { 'settings.plugin.item': { kind: 'keyed', scope: 'root' } },
   }, ConfigurablePluginsTab))
 
   ctx.slots.inject('settings.plugin.item', function* () {
     yield ctx.slots.register({
       name: 'settings.plugin.item',
-      id: 'bash',
-      order: 0,
+      key: SHELL_NS,
       locale: NS,
       inject: () => bash.inject(),
     }, BashCard)
     yield ctx.slots.register({
       name: 'settings.plugin.item',
-      id: 'agent-loop',
-      order: 10,
+      key: AGENT_LOOP_NS,
       locale: NS,
       inject: () => agentLoop.inject(),
     }, AgentLoopCard)
     yield ctx.slots.register({
       name: 'settings.plugin.item',
-      id: 'web-search',
-      order: 20,
+      key: WEB_SETTINGS_NS,
       locale: NS,
       inject: () => webSearch.inject(),
     }, WebSearchCard)

@@ -9,7 +9,7 @@ import { TestRemote, usePinnedBrowserLanguages } from '@deepseek-ai/dsh-client-t
 import { SettingsScopeBinder } from '@deepseek-ai/dsh-client-ui-settings/client'
 import { apply, inject } from '@deepseek-ai/dsh-client-ui-settings-plugins/client'
 import type {
-  ConfigurablePluginsTabFace, PluginsSettingsSectionInjected,
+  PluginsSettingsSectionInjected,
 } from '@deepseek-ai/dsh-client-ui-settings-plugins/client'
 
 // The service reads its initial locale from the browser; these specs assert
