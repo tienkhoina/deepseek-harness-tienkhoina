@@ -28,6 +28,7 @@ import type { PluginsSettingsSectionInjected, PluginsSettingsTabEntry } from './
 import { WebSearchCard } from './WebSearchCard.tsx'
 import { AGENT_LOOP_NS, AgentLoopCardController } from './agent-loop-card-controller.ts'
 import { SHELL_NS, BashCardController } from './bash-card-controller.ts'
+import { ConfigurablePluginsTabController } from './tab-store.ts'
 import type { SettingsScope } from '@deepseek-ai/dsh-client-runtime/client'
 import {
   WEB_SEARCH_DEEPSEEK_NS,
@@ -76,6 +77,23 @@ export function apply(ctx: ClientContext): void {
     ctx.settingsScope.bind({ namespace: WEB_SETTINGS_NS }),
     webSearchScopes,
     api,
+  )
+
+  // Which namespaces the Host serves is a registration fact the wire does not
+  // announce, so the directory re-reads on the two signals that can carry a
+  // changed composition: a settings document commit and a reconnect.
+  const configurable = new ConfigurablePluginsTabController(
+    api, () => ctx.slots.entries('settings.plugin.item'))
+  ctx.effect(() => () => { configurable.dispose() }, 'ui-settings-plugins: tab directory')
+  ctx.effect(
+    () => ctx.remote.$on('settings/document-updated', () => { void configurable.load() }),
+    'ui-settings-plugins: served-namespace invalidations',
+  )
+  ctx.effect(
+    () => ctx.remote.$on('connection/status-changed', (status) => {
+      if (status === 'connected') void configurable.load()
+    }),
+    'ui-settings-plugins: served-namespace reconnect',
   )
 
   // The credential a card reports is not part of any settings section, so its
